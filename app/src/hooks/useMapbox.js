@@ -3,7 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import { v4 } from 'uuid';
 import { Subject } from 'rxjs';
 
-mapboxgl.accessToken = '';
+mapboxgl.accessToken = 'pk.eyJ1IjoibWM5NzMyMjAiLCJhIjoiY2xmNXU0MHNqMWIxbDNwbG1reHdxb2h1NiJ9.APgAvMXfkgAH7h10D2Obrg';
 
 export const useMapbox = ( puntoInicial ) => {
     
@@ -25,12 +25,12 @@ export const useMapbox = ( puntoInicial ) => {
     const [ coords, setCoords ] = useState( puntoInicial );
 
     // función para agregar marcadores
-    const agregarMarcador = useCallback( (ev) => {
+    const agregarMarcador = useCallback( (ev, id) => {
 
-        const { lng, lat } = ev.lngLat;
+        const { lng, lat } = ev.lngLat || ev;
 
         const marker = new mapboxgl.Marker();
-        marker.id = v4(); // TODO: si el marcador ya tiene ID
+        marker.id = id ?? v4();
         
         marker
             .setLngLat([ lng, lat ])
@@ -40,13 +40,14 @@ export const useMapbox = ( puntoInicial ) => {
         // Asignamos al objeto de marcadores
         marcadores.current[ marker.id ] = marker;
 
-        // TODO: si el marcador tiene ID no emitir
-        nuevoMarcador.current.next({
-            id: marker.id,
-            lng, 
-            lat
-        });
-
+        if (!id) {
+            nuevoMarcador.current.next({
+                id: marker.id,
+                lng, 
+                lat
+            });
+        }
+      
         // escuchar movimientos del marcador
         marker.on('drag', ({ target }) => {
             const { id } = target;
@@ -54,7 +55,13 @@ export const useMapbox = ( puntoInicial ) => {
             movimientoMarcador.current.next({ id, lng, lat });
         });
 
-    },[])
+    }, [])
+    
+    const actualizarPosicion = useCallback(({id, lng, lat}) => {
+      
+        marcadores.current[id].setLngLat([lng, lat]);
+        
+    },[]);
 
 
 
@@ -91,6 +98,7 @@ export const useMapbox = ( puntoInicial ) => {
 
     return {
         agregarMarcador,
+        actualizarPosicion,
         coords,
         marcadores,
         nuevoMarcador$: nuevoMarcador.current,

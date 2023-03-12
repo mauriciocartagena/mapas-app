@@ -6,6 +6,6 @@ import { MapasApp } from './MapasApp';
 
 
 ReactDOM.render(
-    <MapasApp />,
+  <MapasApp />,
   document.getElementById('root')
 );
